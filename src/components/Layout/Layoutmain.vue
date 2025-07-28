@@ -7,7 +7,7 @@
         <slot name="default"></slot>
       </v-container>
     </v-main>
-    <BottomNav />
+
   </v-app>
 </template>
 
@@ -18,11 +18,9 @@ import BottomNav from "@/components/Navigation/BottomNav.vue";
 </script>
 <style>
 .screen {
-  background: linear-gradient(
-    225deg,
-    rgb(31, 65, 70) 0%,
-    rgb(18, 44, 47) 28%,
-    rgba(3, 7, 7, 1) 75%
-  ) !important;
+  background: linear-gradient(225deg,
+      rgb(31, 65, 70) 0%,
+      rgb(18, 44, 47) 28%,
+      rgba(3, 7, 7, 1) 75%) !important;
 }
 </style>

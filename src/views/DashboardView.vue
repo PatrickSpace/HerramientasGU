@@ -5,58 +5,76 @@
       <v-divider class="my-5 mx-auto"></v-divider>
       <v-card class="pa-2 card-backgoundcustom" id="container" elevation="2">
         <v-card-item>
-          <v-card-title class="text-h5"> Tu progreso </v-card-title>
+          <v-card-title class="text-h5"> Clasificación de herramientas </v-card-title>
           <v-card-subtitle>
-            Te felicitamos por seguir con tu terapia, aqui tienes algunos datos
-            relevantes:
+            Ingresa los modulos que deseas evaluar
           </v-card-subtitle>
         </v-card-item>
         <v-card-text class="pb-0">
-          <v-row class="text-center py-5">
-            <v-col cols="4">
-              <div>
-                <h3 class="text-h4">6</h3>
-                <p>Semanas de racha</p>
-              </div>
-            </v-col>
-            <v-col cols="4">
-              <div>
-                <h3 class="text-h4">6</h3>
-                <p>Semanas de racha</p>
-              </div>
-            </v-col>
-            <v-col cols="4">
-              <div>
-                <h3 class="text-h4">6</h3>
-                <p>Semanas de racha</p>
-              </div>
-            </v-col>
-          </v-row>
+          <v-combobox v-model="selected" clearable chips multiple label="Combobox" :items="modulos"></v-combobox>
           <v-divider></v-divider>
           <v-card-actions class="my-2">
-            <v-btn color="" class="px-3" rounded="sm" variant="text">Mas infromación</v-btn>
+            <v-btn @click="consultarRanking()" color="" class="px-3" rounded="sm" variant="text">Procesar</v-btn>
           </v-card-actions>
         </v-card-text>
       </v-card>
-
-      <v-card class="pa-2 my-5 card-backgoundcustom" elevation="2" variant="text"
-        href="https://github.com/vuetifyjs/vuetify/">
-        <v-card-title class="text-h5">
-          Tu terapeuta <v-icon size="small">mdi-open-in-new</v-icon>
-        </v-card-title>
-        <v-card-text>
-          <v-divider></v-divider>
-          <v-list-item class="w-150 pt-5">
-            <template v-slot:prepend>
-              <v-avatar color="white"
-                image="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairShortCurly&accessoriesType=Prescription02&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=White&eyeType=Default&eyebrowType=DefaultNatural&mouthType=Default&skinColor=Light"></v-avatar>
-            </template>
-            <v-list-item-title>Daniela Rivera</v-list-item-title>
-            <v-list-item-subtitle>Especialista en terapia cognitivo
-              conductual</v-list-item-subtitle>
-          </v-list-item>
+      <v-card class=" my-5 pa-2 card-backgoundcustom" id="container" elevation="2"
+        v-if="resultado && !loading && !error">
+        <v-card-item>
+          <v-card-title class="text-h5"> Resultado del ranking </v-card-title>
+        </v-card-item>
+        <v-card-text class="pb-0">
+          <div v-if="loading">Cargando...</div>
+          <div v-if="error" class="text-red">{{ error }}</div>
+          <template v-if="resultado && typeof resultado === 'object'">
+            <h3>Herramientas que cumplen el alcance</h3>
+            <v-list class="bg-transparent"
+              v-if="resultado['Herramientas que cumplen el alcance'] && resultado['Herramientas que cumplen el alcance'].length">
+              <v-list-item v-for="(herramienta, idx) in resultado['Herramientas que cumplen el alcance']" :key="idx">
+                <v-list-item-content>
+                  <v-list-item-title>{{ herramienta.nombre }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    Precio: {{ herramienta.precio }}<br>
+                    Módulos que cubre: {{ herramienta.modulos_cubre }}
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+            <div v-else>
+              Ninguna herramienta cubre todos los módulos seleccionados.
+            </div>
+            <v-divider class="my-4"></v-divider>
+            <h3>Herramientas que no cumplen el alcance</h3>
+            <v-list class="bg-transparent"
+              v-if="resultado['Herramientas que no cumplen el alcance'] && resultado['Herramientas que no cumplen el alcance'].length">
+              <v-list-item v-for="(herramienta, idx) in resultado['Herramientas que no cumplen el alcance']" :key="idx">
+                <v-list-item-content>
+                  <v-list-item-title>{{ herramienta.nombre }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    Faltan: <span style="color:#c62828;">{{ herramienta.modulos_faltantes.join(', ') }}</span>
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+            <div v-else>
+              Todas las herramientas cumplen el alcance.
+            </div>
+          </template>
+          <div v-else-if="resultado && typeof resultado === 'string'">
+            {{ resultado }}
+          </div>
         </v-card-text>
       </v-card>
+      <v-card class="my-5 pa-2 card-backgoundcustom" id="container" elevation="2"
+        v-if="!resultado && !loading && !error">
+        <v-card-item>
+          <v-card-title class="text-h5"> Resultado del ranking </v-card-title>
+        </v-card-item>
+        <v-card-text class="pb-0">
+          <div>Selecciona los módulos y presiona "Procesar"</div>
+        </v-card-text>
+      </v-card>
+
     </v-container>
   </LayoutDefault>
 </template>
@@ -67,8 +85,57 @@
 
 .card-backgoundcustom {
   background-color: #4d575839 !important;
+
 }
 </style>
 <script setup>
 import LayoutDefault from "@/components/Layout/Layoutmain.vue";
+import { ref } from 'vue'
+import axios from 'axios'
+
+const selected = ref([])
+const modulos = [
+  "Gestión de Incidentes",
+  "Gestión de Problemas",
+  "Gestión de Cambios",
+  "Gestión de Solicitudes de Servicio",
+  "Catálogo de Servicios",
+  "Gestión de Activos",
+  "Gestión de Configuración (CMDB)",
+  "Gestión de Niveles de Servicio (SLA)",
+  "Gestión de Cambios Emergentes",
+  "Gestión de Proyectos",
+  "Gestión del Conocimiento",
+  "Gestión de Despliegues (Release Management)",
+  "Gestión de Contratos",
+  "Gestión de Proveedores",
+  "Observabilidad",
+  "gaaaaa"
+]
+
+const resultado = ref(null)
+const loading = ref(false)
+const error = ref("")
+
+async function consultarRanking() {
+  if (selected.value.length === 0) {
+    error.value = 'Selecciona al menos un módulo'
+    return
+  }
+  error.value = ''
+  resultado.value = null
+  loading.value = true
+  try {
+    const res = await axios.post('http://localhost:3000/ranking-herramientas', {
+      modulos: selected.value
+    })
+    resultado.value = res.data
+    console.log('Resultado del ranking:', resultado.value)
+  } catch (e) {
+    error.value = 'Error consultando el backend'
+    console.error('Error al consultar el ranking:', e)
+  } finally {
+    loading.value = false
+  }
+}
 </script>
